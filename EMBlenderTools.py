@@ -79,6 +79,8 @@ class EMToolsPanel(bpy.types.Panel):
         row = layout.row()
         self.layout.operator("import.em_graphml", icon="STICKY_UVS_DISABLE", text='Read/Refresh EM file')
         row = layout.row()
+        self.layout.operator("uslist_icon.update", icon="PARTICLE_DATA", text='Only icons refresh')
+        row = layout.row()
         layout.alignment = 'LEFT'
         row.template_list("EM_UL_List", "EM nodes", scene, "em_list", scene, "em_list_index")
         if scene.em_list_index >= 0 and len(scene.em_list) > 0:
@@ -88,14 +90,29 @@ class EMToolsPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(item, "name", text="")
             row = layout.row()
-#            layout.alignment = 'EXPAND'
             row.label(text="Description:")
             row = layout.row()
             layout.alignment = 'LEFT'
             row.prop(item, "description", text="", slider=True)
-            
+        if obj.type in ['MESH']:  
+            obj = context.object
+            row = layout.row()
+            row.label(text="Active proxy object is: " + obj.name)
+            row = layout.row()
+            row.label(text="Manual override")
+            row = layout.row()
+            row.prop(obj, "name")
+            row = layout.row()
+            self.layout.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='US name to active proxy')
                     
 #### da qui si definiscono le funzioni e gli operatori
+
+#def selectedjustonemesh(context):
+#    scene = context.scene
+#    
+#    check = 
+#    return check
+    
 
 def EM_extract_node_name(node_element):
     is_d4 = False
@@ -161,7 +178,29 @@ def EM_check_GraphML_Blender(node_name):
         if ob.name == node_name:
             icon_check = 'FILE_TICK'
     return icon_check
+
+
+class EM_usname_OT_toproxy(bpy.types.Operator):
+    bl_idname = "usname.toproxy"
+    bl_label = "Use US name for selected proxy"
+    bl_options = {"REGISTER", "UNDO"}
     
+    def execute(self, context):
+        scene = context.scene
+        item = scene.em_list[scene.em_list_index]
+        scene.objects.active.name = item.name
+        update_icons(context)
+        return {'FINISHED'}
+
+class EM_update_icon_list(bpy.types.Operator):
+    bl_idname = "uslist_icon.update"
+    bl_label = "Update only the icons"
+    bl_options = {"REGISTER", "UNDO"}
+    
+    def execute(self, context):
+        update_icons(context)
+        return {'FINISHED'}
+
 
 class EM_import_GraphML(bpy.types.Operator):
     bl_idname = "import.em_graphml"
@@ -183,7 +222,7 @@ class EM_import_GraphML(bpy.types.Operator):
                     scene.em_list.add()
                     scene.em_list[em_list_index_ema].name = my_nodename
                     scene.em_list[em_list_index_ema].icon = EM_check_GraphML_Blender(my_nodename)
-                    print('-' + my_nodename + '-' + ' has an icon: ' + EM_check_GraphML_Blender(my_nodename))
+#                    print('-' + my_nodename + '-' + ' has an icon: ' + EM_check_GraphML_Blender(my_nodename))
                     scene.em_list[em_list_index_ema].description = my_node_description
                     em_list_index_ema += 1                    
                 else:
@@ -206,6 +245,12 @@ class EM_import_GraphML(bpy.types.Operator):
 ##        
         return {'FINISHED'}
 
+def update_icons(context):
+    scene = context.scene
+    for US in scene.em_list:
+        US.icon = EM_check_GraphML_Blender(US.name)
+    return
+
     
 # qui registro e cancello tutte le classi
 
@@ -214,6 +259,9 @@ def register():
     bpy.utils.register_class(EM_import_GraphML)
     bpy.utils.register_class(EMListItem)
     bpy.utils.register_class(EM_UL_List)
+    bpy.utils.register_class(EM_usname_OT_toproxy)
+    bpy.utils.register_class(EM_update_icon_list)
+
 
 # here I register the EM node list with the stratigraphic units
     bpy.types.Scene.em_list = prop.CollectionProperty(type = EMListItem)
@@ -233,7 +281,9 @@ def unregister():
     bpy.utils.unregister_class(EMListItem)
     bpy.utils.unregister_class(EM_UL_List)
     bpy.utils.unregister_class(EMToolsPanel)
-    bpy.utils.unregister_class(EM_import_GraphML)    
+    bpy.utils.unregister_class(EM_import_GraphML)
+    bpy.utils.unregister_class(EM_usname_OT_toproxy)
+    bpy.utils.unregister_class(EM_update_icon_list)
     del bpy.types.Scene.EM_file
 
 if __name__ == "__main__":
