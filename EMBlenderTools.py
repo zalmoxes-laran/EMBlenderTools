@@ -52,12 +52,19 @@ class EMListItem(bpy.types.PropertyGroup):
            
 class EM_UL_List(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-
+        icons_style = 'OUTLINER'
         scene = context.scene
 #        layout.column_flow(align = True)
-        layout.label(item.name, icon = item.icon)
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            layout.label(item.name, icon = item.icon)
+#            icon = 'VIEWZOOM' #if super_group.use_toggle else 'VIEWZOOM'
+#            op = layout.operator(
+#                "uslist_icon.update", text="", emboss=False, icon=icon)
+#            op.group_idx = index
+#            op.is_menu = False
+#            op.is_select = True
+            layout.label(item.description, icon='NONE', icon_value=0)
 #        layout.column_flow(align = True)
-        layout.label(item.description, icon='NONE', icon_value=0)
 
 ##### da qui inizia la definizione delle classi pannello
 
@@ -65,7 +72,7 @@ class EMToolsPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
-    bl_category = "BL"
+    bl_category = "EM"
     bl_label = "Extended Matrix"
      
     def draw(self, context):
