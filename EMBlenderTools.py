@@ -1,7 +1,7 @@
 bl_info = {
     "name": "EM tools",
     "author": "E. Demetrescu",
-    "version": (1,0,2),
+    "version": (1,0,3),
     "blender": (2, 7, 9),
     "location": "Tool Shelf panel",
     "description": "Blender tools for Extended Matrix",
@@ -55,15 +55,15 @@ class EM_UL_List(bpy.types.UIList):
         icons_style = 'OUTLINER'
         scene = context.scene
 #        layout.column_flow(align = True)
-        if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            layout.label(item.name, icon = item.icon)
-#            icon = 'VIEWZOOM' #if super_group.use_toggle else 'VIEWZOOM'
-#            op = layout.operator(
-#                "uslist_icon.update", text="", emboss=False, icon=icon)
-#            op.group_idx = index
-#            op.is_menu = False
-#            op.is_select = True
-            layout.label(item.description, icon='NONE', icon_value=0)
+#        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+        layout.label(item.name, icon = item.icon)
+#        icon = 'VIEWZOOM' #if super_group.use_toggle else 'VIEWZOOM'
+#        op = layout.operator(
+#            "uslist_icon.update", text="", emboss=False, icon=icon)
+#        op.group_idx = index
+#        op.is_menu = False
+#        op.is_select = True
+        layout.label(item.description, icon='NONE', icon_value=0)
 #        layout.column_flow(align = True)
 
 ##### da qui inizia la definizione delle classi pannello
@@ -85,11 +85,13 @@ class EMToolsPanel(bpy.types.Panel):
         row.prop(context.scene, 'EM_file', toggle = True) 
         row = layout.row()
         self.layout.operator("import.em_graphml", icon="STICKY_UVS_DISABLE", text='Read/Refresh EM file')
-        row = layout.row()
+#        row = layout.row()
         self.layout.operator("uslist_icon.update", icon="PARTICLE_DATA", text='Only icons refresh')
         row = layout.row()
         layout.alignment = 'LEFT'
         row.template_list("EM_UL_List", "EM nodes", scene, "em_list", scene, "em_list_index")
+        if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
+            self.layout.operator("select.listitem", icon="HAND", text='Select 3D proxy')
         if scene.em_list_index >= 0 and len(scene.em_list) > 0:
             item = scene.em_list[scene.em_list_index]
             row = layout.row()
@@ -104,11 +106,10 @@ class EMToolsPanel(bpy.types.Panel):
         if obj.type in ['MESH']:  
             obj = context.object
             row = layout.row()
+            row = layout.row()
             row.label(text="Active proxy object is: " + obj.name)
             row = layout.row()
-            row.label(text="Manual override")
-            row = layout.row()
-            row.prop(obj, "name")
+            row.prop(obj, "name", "Override it")
             row = layout.row()
             self.layout.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='US name to active proxy')
                     
@@ -208,6 +209,23 @@ class EM_update_icon_list(bpy.types.Operator):
         update_icons(context)
         return {'FINISHED'}
 
+def select_3D_obj(name):
+    scene = bpy.context.scene
+    bpy.ops.object.select_all(action="DESELECT")
+    object_to_select = bpy.data.objects[name]
+    object_to_select.select = True
+       
+
+class EM_select_list_item(bpy.types.Operator):
+    bl_idname = "select.listitem"
+    bl_label = "Select 3D proxy from the list above"
+    bl_options = {"REGISTER", "UNDO"}
+    
+    def execute(self, context):
+        scene = context.scene
+        list_item = scene.em_list[scene.em_list_index]
+        select_3D_obj(list_item.name)
+        return {'FINISHED'}
 
 class EM_import_GraphML(bpy.types.Operator):
     bl_idname = "import.em_graphml"
@@ -268,6 +286,7 @@ def register():
     bpy.utils.register_class(EM_UL_List)
     bpy.utils.register_class(EM_usname_OT_toproxy)
     bpy.utils.register_class(EM_update_icon_list)
+    bpy.utils.register_class(EM_select_list_item)
 
 
 # here I register the EM node list with the stratigraphic units
@@ -285,6 +304,7 @@ def unregister():
     del bpy.types.Scene.em_list
     del bpy.types.Scene.em_list_index
     
+    bpy.utils.unregister_class(EM_select_list_item)
     bpy.utils.unregister_class(EMListItem)
     bpy.utils.unregister_class(EM_UL_List)
     bpy.utils.unregister_class(EMToolsPanel)
