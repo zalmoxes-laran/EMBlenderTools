@@ -1,7 +1,7 @@
 bl_info = {
     "name": "EM tools",
     "author": "E. Demetrescu",
-    "version": (1,0,3),
+    "version": (1,0,4),
     "blender": (2, 7, 9),
     "location": "Tool Shelf panel",
     "description": "Blender tools for Extended Matrix",
@@ -84,18 +84,30 @@ class EMToolsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(context.scene, 'EM_file', toggle = True) 
         row = layout.row()
-        self.layout.operator("import.em_graphml", icon="STICKY_UVS_DISABLE", text='Read/Refresh EM file')
+        split = layout.split()
+        col = split.column()
+        col.operator("import.em_graphml", icon="STICKY_UVS_DISABLE", text='(Re)Load EM file')
 #        row = layout.row()
-        self.layout.operator("uslist_icon.update", icon="PARTICLE_DATA", text='Only icons refresh')
+        col = split.column(align=True)
+        col.operator("uslist_icon.update", icon="PARTICLE_DATA", text='Refresh icons')
+        
         row = layout.row()
         layout.alignment = 'LEFT'
         row.template_list("EM_UL_List", "EM nodes", scene, "em_list", scene, "em_list_index")
+        
+        split = layout.split()
+        col = split.column()
         if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
-            self.layout.operator("select.listitem", icon="HAND", text='Select 3D proxy')
+            col.operator("select.fromlistitem", icon="HAND", text='proxy from list')
+        # Second column, aligned
+        col = split.column(align=True)
+        if check_if_current_obj_has_brother_inlist(obj.name):
+            col.operator("select.listitem", icon="HAND", text='list from proxy')
+
         if scene.em_list_index >= 0 and len(scene.em_list) > 0:
             item = scene.em_list[scene.em_list_index]
             row = layout.row()
-            row.label(text="Name:")
+            row.label(text="US/USV name:")
             row = layout.row()
             row.prop(item, "name", text="")
             row = layout.row()
@@ -109,18 +121,21 @@ class EMToolsPanel(bpy.types.Panel):
             row = layout.row()
             row.label(text="Active proxy object is: " + obj.name)
             row = layout.row()
-            row.prop(obj, "name", "Override it")
+            row.prop(obj, "name", "Override name")
             row = layout.row()
-            self.layout.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='US name to active proxy')
+            self.layout.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='US/USV name to active proxy')
                     
 #### da qui si definiscono le funzioni e gli operatori
 
-#def selectedjustonemesh(context):
-#    scene = context.scene
-#    
-#    check = 
-#    return check
-    
+
+def check_if_current_obj_has_brother_inlist(obj_name):
+    scene = bpy.context.scene
+    for us_usv in scene.em_list:
+        if us_usv.name == obj_name:
+            is_brother = True
+            return is_brother
+    is_brother = False
+    return is_brother
 
 def EM_extract_node_name(node_element):
     is_d4 = False
@@ -187,7 +202,6 @@ def EM_check_GraphML_Blender(node_name):
             icon_check = 'FILE_TICK'
     return icon_check
 
-
 class EM_usname_OT_toproxy(bpy.types.Operator):
     bl_idname = "usname.toproxy"
     bl_label = "Use US name for selected proxy"
@@ -215,9 +229,23 @@ def select_3D_obj(name):
     object_to_select = bpy.data.objects[name]
     object_to_select.select = True
        
-
 class EM_select_list_item(bpy.types.Operator):
     bl_idname = "select.listitem"
+    bl_label = "Select element in the list above from a 3D proxy"
+    bl_options = {"REGISTER", "UNDO"}
+    
+    def execute(self, context):
+        scene = context.scene
+        obj = context.object
+        index_list = 0
+        for i in scene.em_list:
+            if obj.name == i.name:
+                scene.em_list_index = index_list
+            index_list += 1
+        return {'FINISHED'}
+
+class EM_select_from_list_item(bpy.types.Operator):
+    bl_idname = "select.fromlistitem"
     bl_label = "Select 3D proxy from the list above"
     bl_options = {"REGISTER", "UNDO"}
     
@@ -254,20 +282,6 @@ class EM_import_GraphML(bpy.types.Operator):
                     pass
             else:
                 pass        
-
-#        test = tree.findall('.//{http://www.yworks.com/xml/graphml}NodeLabel')
-#        
-
-
-#        em_list_index_ema = 0
-#        for n in test:
-#            if n.text.startswith("SU") or n.text.startswith("USV") or n.text.startswith("USM") or n.text.startswith("USR"):
-#                scene.em_list.add()
-#                scene.em_list[em_list_index_ema].name = n.text
-#                scene.em_list[em_list_index_ema].icon = EM_check_GraphML_Blender(n.text)
-#                scene.em_list[em_list_index_ema].description = 'to be implemented'
-#                em_list_index_ema += 1
-##        
         return {'FINISHED'}
 
 def update_icons(context):
@@ -276,7 +290,6 @@ def update_icons(context):
         US.icon = EM_check_GraphML_Blender(US.name)
     return
 
-    
 # qui registro e cancello tutte le classi
 
 def register():
@@ -287,7 +300,7 @@ def register():
     bpy.utils.register_class(EM_usname_OT_toproxy)
     bpy.utils.register_class(EM_update_icon_list)
     bpy.utils.register_class(EM_select_list_item)
-
+    bpy.utils.register_class(EM_select_from_list_item)
 
 # here I register the EM node list with the stratigraphic units
     bpy.types.Scene.em_list = prop.CollectionProperty(type = EMListItem)
@@ -311,6 +324,7 @@ def unregister():
     bpy.utils.unregister_class(EM_import_GraphML)
     bpy.utils.unregister_class(EM_usname_OT_toproxy)
     bpy.utils.unregister_class(EM_update_icon_list)
+    bpy.utils.unregister_class(EM_select_from_list_item)
     del bpy.types.Scene.EM_file
 
 if __name__ == "__main__":
