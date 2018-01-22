@@ -79,10 +79,11 @@ class EMToolsPanel(bpy.types.Panel):
         layout = self.layout
         scene = context.scene
         obj = context.object
-        row = layout.row()
+        box = layout.box()
+        row = box.row(align=True)
         row.label(text="EM file")
-        row = layout.row()
-        row.prop(context.scene, 'EM_file', toggle = True) 
+        row = box.row(align=True)
+        row.prop(context.scene, 'EM_file', toggle = True, text ="") 
         row = layout.row()
         split = layout.split()
         col = split.column()
@@ -106,24 +107,25 @@ class EMToolsPanel(bpy.types.Panel):
 
         if scene.em_list_index >= 0 and len(scene.em_list) > 0:
             item = scene.em_list[scene.em_list_index]
-            row = layout.row()
-            row.label(text="US/USV name:")
-            row = layout.row()
+            box = layout.box()
+            row = box.row(align=True)
+            row.label(text="US/USV name, description:")
+            row = box.row()
             row.prop(item, "name", text="")
-            row = layout.row()
-            row.label(text="Description:")
-            row = layout.row()
-            layout.alignment = 'LEFT'
+#            row = layout.row()
+#            row.label(text="Description:")
+            row = box.row()
+#            layout.alignment = 'LEFT'
             row.prop(item, "description", text="", slider=True)
         if obj.type in ['MESH']:  
             obj = context.object
-            row = layout.row()
-            row = layout.row()
-            row.label(text="Active proxy object is: " + obj.name)
-            row = layout.row()
-            row.prop(obj, "name", "Override name")
-            row = layout.row()
-            self.layout.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='US/USV name to active proxy')
+            box = layout.box()
+            row = box.row()            
+            row.label(text="Override active object name: " + obj.name)
+            row = box.row()
+            row.prop(obj, "name", "Manual")
+            row = box.row()
+            row.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='Using EM list')
                     
 #### da qui si definiscono le funzioni e gli operatori
 
