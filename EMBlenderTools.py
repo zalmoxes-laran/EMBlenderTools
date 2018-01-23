@@ -1,7 +1,7 @@
 bl_info = {
     "name": "EM tools",
     "author": "E. Demetrescu",
-    "version": (1,0,4),
+    "version": (1,0,5),
     "blender": (2, 7, 9),
     "location": "Tool Shelf panel",
     "description": "Blender tools for Extended Matrix",
@@ -84,8 +84,8 @@ class EMToolsPanel(bpy.types.Panel):
         row.label(text="EM file")
         row = box.row(align=True)
         row.prop(context.scene, 'EM_file', toggle = True, text ="") 
-        row = layout.row()
-        split = layout.split()
+        row = box.row(align=True)
+        split = row.split()
         col = split.column()
         col.operator("import.em_graphml", icon="STICKY_UVS_DISABLE", text='(Re)Load EM file')
 #        row = layout.row()
@@ -94,8 +94,10 @@ class EMToolsPanel(bpy.types.Panel):
         
         row = layout.row()
         layout.alignment = 'LEFT'
+        row.label(text="List of US/USV in EM file:")
+        row = layout.row()
         row.template_list("EM_UL_List", "EM nodes", scene, "em_list", scene, "em_list_index")
-        
+
         split = layout.split()
         col = split.column()
         if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
@@ -121,7 +123,7 @@ class EMToolsPanel(bpy.types.Panel):
             obj = context.object
             box = layout.box()
             row = box.row()            
-            row.label(text="Override active object name: " + obj.name)
+            row.label(text="Override active object's name:")#: " + obj.name)
             row = box.row()
             row.prop(obj, "name", "Manual")
             row = box.row()
@@ -271,6 +273,7 @@ class EM_import_GraphML(bpy.types.Operator):
 #        tree = ET.parse('/Users/emanueldemetrescu/Desktop/EM_test.graphml')
         allnodes = tree.findall('.//{http://graphml.graphdrawing.org/xmlns}node')
         for node_element in allnodes:
+            print(node_element.text)
             if EM_check_node_type(node_element) == 'node_simple': # The node is not a group or a swimlane
                 if EM_check_node_us(node_element): # Check if the node is an US, SU, USV, USM or USR node
                     my_nodename, my_node_description, my_node_url, my_node_shape = EM_extract_node_name(node_element)
