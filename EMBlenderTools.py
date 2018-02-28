@@ -232,6 +232,7 @@ def select_3D_obj(name):
     bpy.ops.object.select_all(action="DESELECT")
     object_to_select = bpy.data.objects[name]
     object_to_select.select = True
+    scene.objects.active = object_to_select
        
 class EM_select_list_item(bpy.types.Operator):
     bl_idname = "select.listitem"
