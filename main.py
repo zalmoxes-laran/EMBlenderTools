@@ -1,15 +1,3 @@
-bl_info = {
-    "name": "EM tools",
-    "author": "E. Demetrescu",
-    "version": (1,0,5),
-    "blender": (2, 7, 9),
-    "location": "Tool Shelf panel",
-    "description": "Blender tools for Extended Matrix",
-    "warning": "",
-    "wiki_url": "",
-    "tracker_url": "",
-    "category": "Tools"}
-
 import xml.etree.ElementTree as ET
 import bpy
 import os
@@ -21,50 +9,6 @@ from bpy.props import (BoolProperty,
                        CollectionProperty,
                        IntProperty
                        )
-
-class EMListItem(bpy.types.PropertyGroup):
-    """ Group of properties representing an item in the list """
-
-    name = prop.StringProperty(
-           name="Name",
-           description="A name for this item",
-           default="Untitled")
-    
-    description = prop.StringProperty(
-           name="Description",
-           description="A description for this item",
-           default="Empty")
-
-    icon = prop.StringProperty(
-           name="code for icon",
-           description="",
-           default="QUESTION")
-    
-    url = prop.StringProperty(
-           name="url",
-           description="An url behind this item",
-           default="Empty")
-    
-    shape = prop.StringProperty(
-           name="shape",
-           description="The shape of this item",
-           default="Empty")
-           
-class EM_UL_List(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        icons_style = 'OUTLINER'
-        scene = context.scene
-#        layout.column_flow(align = True)
-#        if self.layout_type in {'DEFAULT', 'COMPACT'}:
-        layout.label(item.name, icon = item.icon)
-#        icon = 'VIEWZOOM' #if super_group.use_toggle else 'VIEWZOOM'
-#        op = layout.operator(
-#            "uslist_icon.update", text="", emboss=False, icon=icon)
-#        op.group_idx = index
-#        op.is_menu = False
-#        op.is_select = True
-        layout.label(item.description, icon='NONE', icon_value=0)
-#        layout.column_flow(align = True)
 
 ##### da qui inizia la definizione delle classi pannello
 
@@ -295,43 +239,3 @@ def update_icons(context):
     for US in scene.em_list:
         US.icon = EM_check_GraphML_Blender(US.name)
     return
-
-# qui registro e cancello tutte le classi
-
-def register():
-    bpy.utils.register_class(EMToolsPanel)
-    bpy.utils.register_class(EM_import_GraphML)
-    bpy.utils.register_class(EMListItem)
-    bpy.utils.register_class(EM_UL_List)
-    bpy.utils.register_class(EM_usname_OT_toproxy)
-    bpy.utils.register_class(EM_update_icon_list)
-    bpy.utils.register_class(EM_select_list_item)
-    bpy.utils.register_class(EM_select_from_list_item)
-
-# here I register the EM node list with the stratigraphic units
-    bpy.types.Scene.em_list = prop.CollectionProperty(type = EMListItem)
-    bpy.types.Scene.em_list_index = prop.IntProperty(name = "Index for my_list", default = 0)
-    bpy.types.Scene.EM_file = StringProperty(
-      name = "EM GraphML file",
-      default = "",
-      description = "Define the path to the EM GraphML file",
-      subtype = 'FILE_PATH'
-      )
-
-def unregister():
-#    bpy.utils.unregister_module(__name__)
-    del bpy.types.Scene.em_list
-    del bpy.types.Scene.em_list_index
-    
-    bpy.utils.unregister_class(EM_select_list_item)
-    bpy.utils.unregister_class(EMListItem)
-    bpy.utils.unregister_class(EM_UL_List)
-    bpy.utils.unregister_class(EMToolsPanel)
-    bpy.utils.unregister_class(EM_import_GraphML)
-    bpy.utils.unregister_class(EM_usname_OT_toproxy)
-    bpy.utils.unregister_class(EM_update_icon_list)
-    bpy.utils.unregister_class(EM_select_from_list_item)
-    del bpy.types.Scene.EM_file
-
-if __name__ == "__main__":
-    register()
