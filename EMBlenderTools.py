@@ -171,13 +171,13 @@ def EM_check_node_type(node_element):
         tablenode = node_element.find('.//{http://www.yworks.com/xml/graphml}TableNode')
 #        print(tablenode.attrib)
         if tablenode is not None:
-#            print('è un nodo swimlane: ' + id_node)
+#            print(' un nodo swimlane: ' + id_node)
             node_type = 'node_swimlane'
         else:
-#            print('è un nodo group: ' + id_node)
+#            print(' un nodo group: ' + id_node)
             node_type = 'node_group'
     else:
-#        print('è un semplice nodo: ' + id_node)
+#        print(' un semplice nodo: ' + id_node)
         node_type = 'node_simple'
     return node_type
 
