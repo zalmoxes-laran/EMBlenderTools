@@ -127,39 +127,72 @@ def select_list_element_from_obj_proxy(obj):
 def extract_epochs(node_element):
     geometry = node_element.find('.//{http://www.yworks.com/xml/graphml}Geometry')
     y_start = float(geometry.attrib['y'])
-    print(y_start)
+#    print(y_start)
     context = bpy.context
     scene = context.scene    
 #    root.findall("./country/neighbor")
     epoch_list_clear(context)  
-    epoch_list_index_ema = 0   
+    epoch_list_index_ema = 0
+    y_min = y_start
+    y_max = y_start
+
+    for row in node_element.findall('./{http://graphml.graphdrawing.org/xmlns}data/{http://www.yworks.com/xml/graphml}TableNode/{http://www.yworks.com/xml/graphml}Table/{http://www.yworks.com/xml/graphml}Rows/{http://www.yworks.com/xml/graphml}Row'):
+        id_row = row.attrib['id']
+        h_row = float(row.attrib['height'])
+
+        scene.epoch_list.add()
+        scene.epoch_list[epoch_list_index_ema].id = str(id_row)
+        scene.epoch_list[epoch_list_index_ema].height = h_row
+        y_min = y_max
+        y_max += h_row
+        scene.epoch_list[epoch_list_index_ema].min_y = y_min
+        scene.epoch_list[epoch_list_index_ema].max_y = y_max        
+        print(str(id_row))
+        epoch_list_index_ema += 1        
+
     for nodelabel in node_element.findall('./{http://graphml.graphdrawing.org/xmlns}data/{http://www.yworks.com/xml/graphml}TableNode/{http://www.yworks.com/xml/graphml}NodeLabel'):
         RowNodeLabelModelParameter = nodelabel.find('.//{http://www.yworks.com/xml/graphml}RowNodeLabelModelParameter')
         if RowNodeLabelModelParameter is not None:
             label_node = nodelabel.text
-            id_node = RowNodeLabelModelParameter.attrib['id']
-            scene.epoch_list.add()
-            scene.epoch_list[epoch_list_index_ema].name = str(label_node)
-            scene.epoch_list[epoch_list_index_ema].id = str(id_node)
+            id_node = str(RowNodeLabelModelParameter.attrib['id'])
+
+            
 #            print("Il nodo " + str(label_node) + " ha un id: "+ str(id_node))
 #            print("Il nodo " + str(scene.epoch_list[epoch_list_index_ema].name) + " ha un id: "+ str(scene.epoch_list[epoch_list_index_ema].id))
 
 #            scene.em_list[em_list_index_ema].description = my_node_description
-            epoch_list_index_ema += 1 
+ 
         else:
-            pass
-    y_min = y_start
-    y_max = y_start
-    for row in node_element.findall('./{http://graphml.graphdrawing.org/xmlns}data/{http://www.yworks.com/xml/graphml}TableNode/{http://www.yworks.com/xml/graphml}Table/{http://www.yworks.com/xml/graphml}Rows/{http://www.yworks.com/xml/graphml}Row'):
-        id_row = row.attrib['id']
-        h_row = float(row.attrib['height'])
-        index = 0
-
+            id_node = "null"
+            
         for i in range(len(scene.epoch_list)):
             id_key = scene.epoch_list[i].id
-            if id_row == id_key:
-                y_min = y_max
-                y_max += h_row
-                scene.epoch_list[i].min_y = y_min
-                scene.epoch_list[i].max_y = y_max
+            if id_node == id_key:
+                scene.epoch_list[i].name = str(label_node)
+
 #                print("il nodo "+ str(scene.epoch_list[i].name) + " con id: " + str(scene.epoch_list[i].id) + " ha y min: " + str(scene.epoch_list[i].min_y) + " e y max: " + str(scene.epoch_list[i].max_y))
+
+
+def add_sceneobj_to_epochs():
+    scene = bpy.context.scene
+    #deselect all objects
+    selection_names = bpy.context.selected_objects
+    bpy.ops.object.select_all(action='DESELECT')
+
+    #looking through all objects
+    for obj in bpy.data.objects:
+        #if the object is a mesh and not a lamp or camera etc.
+        if obj.type == 'MESH':
+            for USS in scene.em_list:
+                if obj.name == USS.name:
+                    print("ho trovato un oggetto in scena chiamato "+ str(obj.name)+ " ed un nodo US chiamato: " + str(USS.name))
+                    idx = 0
+                    for i in scene.epoch_managers:
+            #            print(USS.epoch)
+             #           print(i.name)
+                        if i.name == USS.epoch:
+                            print("found "+str(USS.epoch)+ " corrispondende all'indice"+str(idx))
+                            obj.select = True
+                            bpy.ops.epoch_manager.add_to_group(group_idx=idx)
+                            obj.select = False
+                        idx +=1

@@ -301,14 +301,16 @@ class EM_epoch_manager_add(bpy.types.Operator):
 
     def execute(self, context):
         
+        bpy.ops.epoch_manager.epoch_manager_remove()
+        
         scene = context.scene
 
         epoch_number = len(scene.epoch_list)
-        
-        for epoch in range(epoch_number):
-    #        print(epoch_number)
 
-            epochname = scene.epoch_list[epoch-1].name
+        for epoch in range(epoch_number):
+        #        print(epoch_number)
+            
+            epochname = scene.epoch_list[epoch].name
 
             check_same_ids()  # check scene ids
 
@@ -321,10 +323,10 @@ class EM_epoch_manager_add(bpy.types.Operator):
                     all_ids.append(e_manager.unique_id)
 
             # remove e_managers
-    #       si presuppone che abbiamo già pulito le epoche
-    #        for obj in context.selected_objects:
-    #            for e_manager in epoch_managers:
-    #                EM_del_properties_from_obj(UNIQUE_ID_NAME, all_ids, obj, True)
+        #       si presuppone che abbiamo già pulito le epoche
+        #        for obj in context.selected_objects:
+        #            for e_manager in epoch_managers:
+        #                EM_del_properties_from_obj(UNIQUE_ID_NAME, all_ids, obj, True)
 
             # generate new id
             uni_numb = generate_id()
@@ -332,18 +334,18 @@ class EM_epoch_manager_add(bpy.types.Operator):
 
             group_idx = len(epoch_managers)
             new_e_manager = epoch_managers.add()
-#            new_e_manager.name = "EM.%.3d" % group_idx
+        #            new_e_manager.name = "EM.%.3d" % group_idx
             new_e_manager.name = epochname
             new_e_manager.unique_id = uni_numb
             scene.epoch_managers_index = group_idx
 
             # add the unique id of selected objects
-    #        for obj in context.selected_objects:
-    #            EM_add_property_to_obj(new_e_manager.unique_id, obj)
+        #        for obj in context.selected_objects:
+        #            EM_add_property_to_obj(new_e_manager.unique_id, obj)
 
         return {'FINISHED'}
     
-#def add_sceneobj_to_epoch(epochname):
+
 
 class EM_epoch_manager_remove(bpy.types.Operator):
 
@@ -763,6 +765,7 @@ class EM_add_to_group(bpy.types.Operator):
 
     group_idx = IntProperty()
 
+
     def execute(self, context):
         scene_parse = context.scene
 
@@ -922,36 +925,3 @@ def check_same_ids():
     check_scenes = None
     all_obj_list = None
     other_ids = None
-
-# registration
-
-
-#def register():
-#    bpy.utils.register_module(__name__)
-
-#    bpy.types.Scene.epoch_managers = CollectionProperty(type=EM_Group)
-#    bpy.types.Object.em_belong_id = CollectionProperty(type=EM_Object_Id)
-#    bpy.types.Scene.sg_settings = PointerProperty(type=EM_Other_Settings)
-
-#    # Unused, but this is needed for the TemplateList to work...
-#    bpy.types.Scene.epoch_managers_index = IntProperty(default=-1)
-
-#    bpy.types.VIEW3D_MT_object_specials.append(menu_func)
-
-
-#def unregister():
-#    import bpy
-
-#    del bpy.types.Scene.epoch_managers
-#    del bpy.types.Object.em_belong_id
-#    del bpy.types.Scene.sg_settings
-
-#    del bpy.types.Scene.epoch_managers_index
-
-#-----    bpy.types.VIEW3D_MT_object_specials.remove(menu_func)
-
-#    bpy.utils.unregister_module(__name__)
-
-
-#if __name__ == "__main__":
-#    register()

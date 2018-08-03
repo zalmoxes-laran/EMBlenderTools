@@ -148,6 +148,11 @@ class EPOCHListItem(bpy.types.PropertyGroup):
            name="code for icon",
            description="",
            default=0.0)
+           
+    height = prop.FloatProperty(
+           name="height of epoch row",
+           description="",
+           default=0.0)
 
 class EM_UL_List(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
