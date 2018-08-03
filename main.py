@@ -45,8 +45,12 @@ class EMToolsPanel(bpy.types.Panel):
 
         split = layout.split()
         col = split.column()
-        if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
-            col.operator("select.fromlistitem", icon="HAND", text='proxy from list')
+
+
+#        if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
+#            col.operator("select.fromlistitem", icon="HAND", text='proxy from list')
+
+
         # Second column, aligned
         col = split.column(align=True)
         if check_if_current_obj_has_brother_inlist(obj.name):
@@ -130,22 +134,32 @@ class EM_import_GraphML(bpy.types.Operator):
         graphml_file = scene.EM_file
         tree = ET.parse(graphml_file)      
         EM_list_clear(context)       
-        em_list_index_ema = 0   
+        em_list_index_ema = 0
 #        tree = ET.parse('/Users/emanueldemetrescu/Desktop/EM_test.graphml')
         allnodes = tree.findall('.//{http://graphml.graphdrawing.org/xmlns}node')
         for node_element in allnodes:
-            print(node_element.text)
+#            print(node_element.text)
             if EM_check_node_type(node_element) == 'node_simple': # The node is not a group or a swimlane
                 if EM_check_node_us(node_element): # Check if the node is an US, SU, USV, USM or USR node
-                    my_nodename, my_node_description, my_node_url, my_node_shape = EM_extract_node_name(node_element)
+                    my_nodename, my_node_description, my_node_url, my_node_shape, my_node_y_pos = EM_extract_node_name(node_element)
                     scene.em_list.add()
                     scene.em_list[em_list_index_ema].name = my_nodename
                     scene.em_list[em_list_index_ema].icon = EM_check_GraphML_Blender(my_nodename)
+                    scene.em_list[em_list_index_ema].y_pos = float(my_node_y_pos)
 #                    print('-' + my_nodename + '-' + ' has an icon: ' + EM_check_GraphML_Blender(my_nodename))
                     scene.em_list[em_list_index_ema].description = my_node_description
                     em_list_index_ema += 1                    
                 else:
                     pass
-            else:
-                pass        
+            if EM_check_node_type(node_element) == 'node_swimlane':
+                print("swimlane node is: " + str(node_element.attrib))
+                extract_epochs(node_element)
+#                my_epoch, my_y_max_epoch, my_y_min_epoch = extract_epochs(node_element)
+#                print(my_epoch)
+        for em_i in range(len(scene.em_list)):
+            #print(scene.em_list[em_i].name)
+            for epoch_in in range(len(scene.epoch_list)):
+                if scene.epoch_list[epoch_in].min_y < scene.em_list[em_i].y_pos < scene.epoch_list[epoch_in].max_y:
+                    scene.em_list[em_i].epoch = scene.epoch_list[epoch_in].name
+                    print(scene.epoch_list[epoch_in].name)
         return {'FINISHED'}

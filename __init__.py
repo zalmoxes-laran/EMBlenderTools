@@ -79,7 +79,41 @@ class EMListItem(bpy.types.PropertyGroup):
            name="shape",
            description="The shape of this item",
            default="Empty")
+    
+    y_pos = prop.FloatProperty(
+           name="y_pos",
+           description="The y_pos of this item",
+           default=0.0)
            
+    epoch = prop.StringProperty(
+           name="code for epoch",
+           description="",
+           default="Empty")           
+    
+
+class EPOCHListItem(bpy.types.PropertyGroup):
+    """ Group of properties representing an item in the list """
+
+    name = prop.StringProperty(
+           name="Name",
+           description="A name for this item",
+           default="Untitled")
+    
+    id = prop.StringProperty(
+           name="id",
+           description="A description for this item",
+           default="Empty")
+
+    min_y = prop.FloatProperty(
+           name="code for icon",
+           description="",
+           default=0.0)
+
+    max_y = prop.FloatProperty(
+           name="code for icon",
+           description="",
+           default=0.0)
+
 class EM_UL_List(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         icons_style = 'OUTLINER'
@@ -111,6 +145,8 @@ def register():
 
     bpy.types.Scene.em_list = prop.CollectionProperty(type = EMListItem)
     bpy.types.Scene.em_list_index = prop.IntProperty(name = "Index for my_list", default = 0)
+    bpy.types.Scene.epoch_list = prop.CollectionProperty(type = EPOCHListItem)
+    bpy.types.Scene.epoch_list_index = prop.IntProperty(name = "Index for epoch_list", default = 0)
     bpy.types.Scene.EM_file = StringProperty(
       name = "EM GraphML file",
       default = "",
