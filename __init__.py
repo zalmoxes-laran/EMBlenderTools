@@ -22,7 +22,7 @@ bl_info = {
     "name": "EM tools",
     "description": "Blender tools for Extended Matrix",
     "author": "E. Demetrescu",
-    "version": (1, 0, 6),
+    "version": (1, 0, 7),
     "blender": (2, 79, 0),
     "location": "Tool Shelf panel",
     "warning": "This addon is still in development.",
@@ -47,10 +47,45 @@ from bpy.props import (BoolProperty,
                        IntProperty
                        )
 
+from bpy.props import StringProperty, BoolProperty, IntProperty, CollectionProperty, BoolVectorProperty, PointerProperty, FloatVectorProperty                       
+
+from bpy.types import Menu, Panel, UIList, PropertyGroup
 from . import developer_utils
 importlib.reload(developer_utils)
 modules = developer_utils.setup_addon_modules(__path__, __name__, "bpy" in locals())
 
+#######################################################################################################################
+# per epoch manager
+###################
+
+class EM_Group(PropertyGroup):
+    use_toggle = BoolProperty(name="", default=True)
+    #is_wire = BoolProperty(name="", default=False)
+    is_locked = BoolProperty(name="", default=False)
+    is_selected = BoolProperty(name="", default=False)
+                               # this is just a temporary value as a user can
+                               # select/deselect
+    unique_id = StringProperty(default="")
+
+    wire_color = FloatVectorProperty(
+        name="wire",
+        subtype='COLOR',
+        default=(0.2, 0.2, 0.2),
+        min=0.0, max=1.0,
+        description="wire color of the group"
+    )
+
+
+class EM_Object_Id(PropertyGroup):
+    unique_id_object = StringProperty(default="")
+
+
+class EM_Other_Settings(PropertyGroup):
+    select_all_layers = BoolProperty(name="Select Visible Layers", default=True)
+    unlock_obj = BoolProperty(name="Unlock Objects", default=False)
+    unhide_obj = BoolProperty(name="Unhide Objects", default=True)
+
+#######################################################################################################################
 
 class EMListItem(bpy.types.PropertyGroup):
     """ Group of properties representing an item in the list """
@@ -121,7 +156,7 @@ class EM_UL_List(bpy.types.UIList):
 #        layout.column_flow(align = True)
 #        if self.layout_type in {'DEFAULT', 'COMPACT'}:
         layout.label(item.name, icon = item.icon)
-#        icon = 'VIEWZOOM' #if super_group.use_toggle else 'VIEWZOOM'
+#        icon = 'VIEWZOOM' #if epoch_manager.use_toggle else 'VIEWZOOM'
 #        op = layout.operator(
 #            "uslist_icon.update", text="", emboss=False, icon=icon)
 #        op.group_idx = index
@@ -136,6 +171,10 @@ class EM_UL_List(bpy.types.UIList):
 ##################################
 
 import traceback
+
+def menu_func(self, context):
+    self.layout.separator()
+
 
 def register():
     try: bpy.utils.register_module(__name__)
@@ -154,8 +193,33 @@ def register():
       subtype = 'FILE_PATH'
       )
 
+######################################################################################################
+#per epoch manager
+##################
+
+    bpy.types.Scene.epoch_managers = CollectionProperty(type=EM_Group)
+    bpy.types.Object.em_belong_id = CollectionProperty(type=EM_Object_Id)
+    bpy.types.Scene.sg_settings = PointerProperty(type=EM_Other_Settings)
+
+    bpy.types.Scene.epoch_managers_index = IntProperty(default=-1)
+
+    bpy.types.VIEW3D_MT_object_specials.append(menu_func)
+
+######################################################################################################
+
+
 def unregister():
     try: bpy.utils.unregister_module(__name__)
     except: traceback.print_exc()
+
+######################################################################################################
+#per epoch manager
+##################
+    del bpy.types.Scene.epoch_managers
+    del bpy.types.Object.em_belong_id
+    del bpy.types.Scene.sg_settings
+
+    del bpy.types.Scene.epoch_managers_index
+######################################################################################################
 
     print("Unregistered {}".format(bl_info["name"]))
