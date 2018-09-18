@@ -46,7 +46,7 @@ from bpy.props import (BoolProperty,
                        CollectionProperty,
                        IntProperty
                        )
-
+from .functions import *
 from bpy.props import StringProperty, BoolProperty, IntProperty, CollectionProperty, BoolVectorProperty, PointerProperty, FloatVectorProperty                       
 
 from bpy.types import Menu, Panel, UIList, PropertyGroup
@@ -84,7 +84,10 @@ class EM_Other_Settings(PropertyGroup):
     select_all_layers = BoolProperty(name="Select Visible Layers", default=True)
     unlock_obj = BoolProperty(name="Unlock Objects", default=False)
     unhide_obj = BoolProperty(name="Unhide Objects", default=True)
-
+    em_proxy_sync = BoolProperty(name="Sync EM Proxy selection", default=True, update = settingsSwitch)
+    em_proxy_sync2 = BoolProperty(name="Sync EM Proxy selection2", default=True, update = settingsSwitch)
+    em_proxy_sync2_zoom = BoolProperty(name="Sync EM Proxy selection2 zoom", default=True, update = settingsSwitch)
+   
 #######################################################################################################################
 
 class EMListItem(bpy.types.PropertyGroup):

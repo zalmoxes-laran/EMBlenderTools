@@ -323,7 +323,7 @@ class EM_epoch_manager_add(bpy.types.Operator):
                     all_ids.append(e_manager.unique_id)
 
             # remove e_managers
-        #       si presuppone che abbiamo gi√† pulito le epoche
+        #       si presuppone che abbiamo gi‡ pulito le epoche
         #        for obj in context.selected_objects:
         #            for e_manager in epoch_managers:
         #                EM_del_properties_from_obj(UNIQUE_ID_NAME, all_ids, obj, True)
