@@ -1,2 +1,7 @@
 
 *.pyc
+__pycache__/main.cpython-35.pyc
+__pycache__/functions.cpython-35.pyc
+__pycache__/epoch_manager.cpython-35.pyc
+__pycache__/developer_utils.cpython-35.pyc
+__pycache__/__init__.cpython-35.pyc
