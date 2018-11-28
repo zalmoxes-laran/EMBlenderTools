@@ -40,12 +40,14 @@ def EM_extract_node_name(node_element):
     nodename = None
     for subnode in node_element.findall('.//{http://graphml.graphdrawing.org/xmlns}data'):
         attrib = subnode.attrib
-        if attrib == {'key': 'd4'}:
+        print(attrib)
+        if attrib == {'{http://www.w3.org/XML/1998/namespace}space': 'preserve', 'key': 'd4'}:
             is_d4 = True
             nodeurl = subnode.text
-        if attrib == {'key': 'd5'}:
+        if attrib == {'{http://www.w3.org/XML/1998/namespace}space': 'preserve', 'key': 'd5'}:
             is_d5 = True
             nodedescription = subnode.text
+            #print(nodedescription)
         if attrib == {'key': 'd6'}:
             for USname in subnode.findall('.//{http://www.yworks.com/xml/graphml}NodeLabel'):
                 nodename = USname.text
@@ -79,7 +81,7 @@ def EM_check_node_type(node_element):
     return node_type
 
 def EM_check_node_us(node_element):
-    US_nodes_list = ['rectangle', 'parallelogram', 'ellipse', 'hexagon']
+    US_nodes_list = ['rectangle', 'parallelogram', 'ellipse', 'hexagon', 'octagon']
     my_nodename, my_node_description, my_node_url, my_node_shape, my_node_y_pos = EM_extract_node_name(node_element)
 #    print(my_node_shape)
     if my_node_shape in US_nodes_list:
