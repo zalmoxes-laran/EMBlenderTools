@@ -1,32 +1,12 @@
-# ***** BEGIN GPL LICENSE BLOCK *****
-#
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ***** END GPL LICENCE BLOCK *****
-
-
-#original code from: 
+# this library is a heavy modified version of the original code from: 
 #    "name": "Super Grouper",
 #    "author": "Paul Geraskin, Aleksey Juravlev, BA Community",
-
 
 import bpy
 import random
 import string
 
+from .functions import *
 from bpy.props import *
 from bpy.types import Operator
 from bpy.types import Menu, Panel, UIList, PropertyGroup
@@ -35,7 +15,6 @@ from bpy.app.handlers import persistent
 
 SCENE_EM = '#EM'
 UNIQUE_ID_NAME = 'em_belong_id'
-
 
 class EM_BasePanel(bpy.types.Panel):
     bl_label = "Epochs Manager"
@@ -67,32 +46,36 @@ class EM_BasePanel(bpy.types.Panel):
             "epoch_manager.change_selected_objects", text="", emboss=False, icon='RETOPO')
         op.sg_objects_changer = 'SHOW_WIRE'
 
-        row = layout.row(align=True)
-        row.operator(
-            "epoch_manager.epoch_manager_add", icon='ZOOMIN', text="")
         op = row.operator(
-            "epoch_manager.epoch_manager_remove", icon='ZOOMOUT', text="")
-        op.group_idx = scene.epoch_managers_index
+            "epoch_manager.change_selected_objects", text="", emboss=False, icon='MATERIAL')
+        op.sg_objects_changer = 'EM_COLOURS'
 
-        op = row.operator(
-            "epoch_manager.epoch_manager_move", icon='TRIA_UP', text="")
-        op.do_move = 'UP'
+#        row = layout.row(align=True)
+#        row.operator(
+#            "epoch_manager.epoch_manager_add", icon='ZOOMIN', text="")
+#        op = row.operator(
+#            "epoch_manager.epoch_manager_remove", icon='ZOOMOUT', text="")
+#        op.group_idx = scene.epoch_managers_index
 
-        op = row.operator(
-            "epoch_manager.epoch_manager_move", icon='TRIA_DOWN', text="")
-        op.do_move = 'DOWN'
+#        op = row.operator(
+#            "epoch_manager.epoch_manager_move", icon='TRIA_UP', text="")
+#        op.do_move = 'UP'
+
+#        op = row.operator(
+#            "epoch_manager.epoch_manager_move", icon='TRIA_DOWN', text="")
+#        op.do_move = 'DOWN'
 
         row = layout.row()
         row.template_list(
             "EM_named_epoch_managers", "", scene, "epoch_managers", scene, "epoch_managers_index")
 
-        row = layout.row()
-        op = row.operator("epoch_manager.add_to_group", text="Add")
-        op.group_idx = scene.epoch_managers_index
+#        row = layout.row()
+#        op = row.operator("epoch_manager.add_to_group", text="Add")
+#        op.group_idx = scene.epoch_managers_index
 
-        row.operator(
-            "epoch_manager.super_remove_from_group", text="Remove")
-        row.operator("epoch_manager.clean_object_ids", text="Clean")
+#        row.operator(
+#            "epoch_manager.super_remove_from_group", text="Remove")
+#        row.operator("epoch_manager.clean_object_ids", text="Clean")
         # layout.separator()
         layout.label(text="Selection Settings:")
         row = layout.row(align=True)
@@ -141,35 +124,6 @@ class EM_named_epoch_managers(UIList):
             layout.alignment = 'CENTER'
 
 
-# master menu
-#class EM_Specials_Main_Menu(bpy.types.Menu):
-#    bl_idname = "epoch_manager.epoch_manager_main_menu"
-#    bl_label = "SuperGrouper"
-#    bl_description = "Super Grouper Menu"
-
-#    def draw(self, context):
-#        layout = self.layout
-
-#        layout.operator(EM_epoch_manager_add.bl_idname)
-#        #layout.operator(EM_epoch_manager_remove.bl_idname)
-#        layout.menu(EM_Remove_SGroup_Sub_Menu.bl_idname)
-
-#        #self.layout.operator(SG_toggle_select.bl_idname)
-#        #self.layout.operator(SG_toggle_visibility.bl_idname)
-
-#        layout.separator()
-#        #layout.operator(SG_add_to_group.bl_idname)
-#        layout.menu(EM_Add_Objects_Sub_Menu.bl_idname)
-#        layout.operator(EM_remove_from_group.bl_idname)
-
-#        layout.separator()
-#        layout.menu(EM_Select_SGroup_Sub_Menu.bl_idname, text="Select SGroup")
-
-#        layout.menu(EM_Deselect_SGroup_Sub_Menu.bl_idname, text="Deselect SGroup")
-
-#        layout.separator()
-#        layout.menu(EM_Toggle_Visible_SGroup_Sub_Menu.bl_idname, text="SGroup Visibility")
-#        layout.menu(EM_Toggle_Shading_Sub_Menu.bl_idname, text="Shade Selected")
 
 
 class EM_Add_Objects_Sub_Menu(bpy.types.Menu):
@@ -287,164 +241,6 @@ def generate_id():
     other_ids = None  # clean
     return uni_numb
 
-
-class EM_epoch_manager_add(bpy.types.Operator):
-
-    """Add and select a new layer group"""
-    bl_idname = "epoch_manager.epoch_manager_add"
-    bl_label = "Add Epoch group"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return bool(context.scene)
-
-    def execute(self, context):
-        
-        bpy.ops.epoch_manager.epoch_manager_remove()
-        
-        scene = context.scene
-
-        epoch_number = len(scene.epoch_list)
-
-        for epoch in range(epoch_number):
-        #        print(epoch_number)
-            
-            epochname = scene.epoch_list[epoch].name
-
-            check_same_ids()  # check scene ids
-
-            epoch_managers = scene.epoch_managers
-
-            # get all ids
-            all_ids = []
-            for e_manager in epoch_managers:
-                if e_manager.unique_id not in all_ids:
-                    all_ids.append(e_manager.unique_id)
-
-            # remove e_managers
-        #       si presuppone che abbiamo già pulito le epoche
-        #        for obj in context.selected_objects:
-        #            for e_manager in epoch_managers:
-        #                EM_del_properties_from_obj(UNIQUE_ID_NAME, all_ids, obj, True)
-
-            # generate new id
-            uni_numb = generate_id()
-            all_ids = None
-
-            group_idx = len(epoch_managers)
-            new_e_manager = epoch_managers.add()
-        #            new_e_manager.name = "EM.%.3d" % group_idx
-            new_e_manager.name = epochname
-            new_e_manager.unique_id = uni_numb
-            scene.epoch_managers_index = group_idx
-
-            # add the unique id of selected objects
-        #        for obj in context.selected_objects:
-        #            EM_add_property_to_obj(new_e_manager.unique_id, obj)
-
-        return {'FINISHED'}
-    
-
-
-class EM_epoch_manager_remove(bpy.types.Operator):
-
-    """Remove selected layer group"""
-    bl_idname = "epoch_manager.epoch_manager_remove"
-    bl_label = "Clear all epochs"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    group_idx = IntProperty()
-
-    @classmethod
-    def poll(cls, context):
-        return bool(context.scene)
-
-    def execute(self, context):
-        scene_parse = context.scene
-        epoch_num = len(scene_parse.epoch_managers)
-        for i in range(epoch_num):
-            self.group_idx = scene_parse.epoch_managers_index
-            # if a scene contains goups
-            if scene_parse.epoch_managers:
-                check_same_ids()  # check scene ids
-                get_e_manager = scene_parse.epoch_managers[self.group_idx]
-                if get_e_manager is not None and self.group_idx < len(scene_parse.epoch_managers):
-                    e_manager_id = get_e_manager.unique_id
-
-                    # get all ids
-                    e_managers = []
-                    for e_manager in scene_parse.epoch_managers:
-                        e_managers.append(e_manager.unique_id)
-
-                    # clear context scene
-                    for obj in scene_parse.objects:
-                        EM_del_properties_from_obj(
-                            UNIQUE_ID_NAME, [e_manager_id], obj, True)
-
-                    # clear SGR scene
-                    sgr_scene_name = scene_parse.name + SCENE_EM
-                    if sgr_scene_name in bpy.data.scenes:
-                        sgr_scene = bpy.data.scenes[scene_parse.name + SCENE_EM]
-                        for obj in sgr_scene.objects:
-                            SGR_switch_object(obj, sgr_scene, scene_parse, e_manager_id)
-                            EM_del_properties_from_obj(
-                                UNIQUE_ID_NAME, [e_manager_id], obj, True)
-
-                        # remove group_scene if it's empty
-                        if len(sgr_scene.objects) == 0:
-                            bpy.data.scenes.remove(sgr_scene)
-
-                    # finally remove e_manager
-                    scene_parse.epoch_managers.remove(self.group_idx)
-                    if len(scene_parse.epoch_managers) > 0:
-                        scene_parse.epoch_managers_index = len(scene_parse.epoch_managers) - 1
-                    else:
-                        scene_parse.epoch_managers_index = -1
-#                    self.group_idx = scene_parse.epoch_managers_index
-        
-        return {'FINISHED'}
-
-
-class EM_epoch_manager_move(bpy.types.Operator):
-
-    """Remove selected layer group"""
-    bl_idname = "epoch_manager.epoch_manager_move"
-    bl_label = "Move Super Group"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    do_move = EnumProperty(
-        items=(('UP', 'UP', ''),
-               ('DOWN', 'DOWN', '')
-               ),
-        default = 'UP'
-    )
-
-    @classmethod
-    def poll(cls, context):
-        return bool(context.scene)
-
-    def execute(self, context):
-        scene = context.scene
-
-        # if a scene contains goups
-        if scene.epoch_managers and len(scene.epoch_managers) > 1:
-            e_manager_id = scene.epoch_managers[scene.epoch_managers_index].unique_id
-            if scene.epoch_managers:
-                move_id = None
-                if self.do_move == 'UP' and scene.epoch_managers_index > 0:
-                    move_id = scene.epoch_managers_index - 1
-                    scene.epoch_managers.move(scene.epoch_managers_index, move_id)
-                elif self.do_move == 'DOWN' and scene.epoch_managers_index < len(scene.epoch_managers) - 1:
-                    move_id = scene.epoch_managers_index + 1
-                    scene.epoch_managers.move(scene.epoch_managers_index, move_id)
-
-                if move_id is not None:
-                    scene.epoch_managers_index = move_id
-
-        return {'FINISHED'}
-
-
 class EM_clean_object_ids(bpy.types.Operator):
 
     """Remove selected layer group"""
@@ -476,7 +272,7 @@ class EM_clean_object_ids(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def SGR_get_group_scene(context):
+def EM_get_group_scene(context):
     group_scene_name = context.scene.name + SCENE_EM
 
     if group_scene_name in bpy.data.scenes:
@@ -596,7 +392,7 @@ class EM_toggle_visibility(bpy.types.Operator):
             current_e_manager = scene.epoch_managers[self.group_idx]
 
             # Try to get or create new GroupScene
-            group_scene = SGR_get_group_scene(context)
+            group_scene = EM_get_group_scene(context)
             if group_scene is None and current_e_manager.use_toggle is True:
                 group_scene = EM_create_group_scene(context)
 
@@ -604,11 +400,11 @@ class EM_toggle_visibility(bpy.types.Operator):
             if group_scene is not None:
                 if current_e_manager.use_toggle is True:
                     for obj in scene.objects:
-                        SGR_switch_object(
+                        EM_switch_object(
                             obj, scene, group_scene, current_e_manager.unique_id)
                 else:
                     for obj in group_scene.objects:
-                        SGR_switch_object(
+                        EM_switch_object(
                             obj, group_scene, scene, current_e_manager.unique_id)
                     if len(group_scene.objects) == 0:
                         bpy.data.scenes.remove(group_scene)
@@ -621,7 +417,7 @@ class EM_toggle_visibility(bpy.types.Operator):
                     scene.objects.active = scene.objects[0]
         return {'FINISHED'}
 
-def SGR_switch_object(obj, scene_source, scene_terget, e_manager_id):
+def EM_switch_object(obj, scene_source, scene_terget, e_manager_id):
     do_switch = False
     if obj.em_belong_id:
         for prop in obj.em_belong_id:
@@ -725,6 +521,7 @@ class EM_change_selected_objects(bpy.types.Operator):
                ('WIRE_SHADE', 'WIRE_SHADE', ''),
                ('MATERIAL_SHADE', 'MATERIAL_SHADE', ''),
                ('SHOW_WIRE', 'SHOW_WIRE', ''),
+               ('EM_COLOURS', 'EM_COLOURS', ''),
                ('ONESIDE_SHADE', 'ONESIDE_SHADE', ''),
                ('TWOSIDE_SHADE', 'TWOSIDE_SHADE', '')
                ),
@@ -753,9 +550,142 @@ class EM_change_selected_objects(bpy.types.Operator):
             elif self.sg_objects_changer == 'TWOSIDE_SHADE':
                 if obj.type == 'MESH':
                     obj.data.show_double_sided = True
+            elif self.sg_objects_changer == 'EM_COLOURS':
+                if obj.type == 'MESH':
+                    set_EM_materials_to_selected(context)
 
         return {'FINISHED'}
 
+
+def set_EM_materials_to_selected(context):
+    em_list_lenght = len(context.scene.em_list)
+    print(str(em_list_lenght))
+    counter = 0
+    while counter < em_list_lenght:
+        #if ob.name == context.scene.em_list[counter].name:
+        if context.scene.em_list[counter].icon == 'FILE_TICK':
+            obj = select_3D_obj(context.scene.em_list[counter].name)
+                #qui inserisco una funzione per poter trovare l'oggetto in scena con lo sesos nome 
+            print(obj.name + context.scene.em_list[counter].name + context.scene.em_list[counter].shape)
+        counter += 1
+    
+
+class EM_epoch_manager_add(bpy.types.Operator):
+
+    """Add and select a new layer group"""
+    bl_idname = "epoch_manager.epoch_manager_add"
+    bl_label = "Add Epoch group"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return bool(context.scene)
+
+    def execute(self, context):
+        
+        bpy.ops.epoch_manager.epoch_manager_remove()
+        
+        scene = context.scene
+
+        epoch_number = len(scene.epoch_list)
+
+        for epoch in range(epoch_number):
+        #        print(epoch_number)
+            
+            epochname = scene.epoch_list[epoch].name
+
+            check_same_ids()  # check scene ids
+
+            epoch_managers = scene.epoch_managers
+
+            # get all ids
+            all_ids = []
+            for e_manager in epoch_managers:
+                if e_manager.unique_id not in all_ids:
+                    all_ids.append(e_manager.unique_id)
+
+            # remove e_managers
+        #       si presuppone che abbiamo giï¿½ pulito le epoche
+        #        for obj in context.selected_objects:
+        #            for e_manager in epoch_managers:
+        #                EM_del_properties_from_obj(UNIQUE_ID_NAME, all_ids, obj, True)
+
+            # generate new id
+            uni_numb = generate_id()
+            all_ids = None
+
+            group_idx = len(epoch_managers)
+            new_e_manager = epoch_managers.add()
+        #            new_e_manager.name = "EM.%.3d" % group_idx
+            new_e_manager.name = epochname
+            new_e_manager.unique_id = uni_numb
+            scene.epoch_managers_index = group_idx
+
+            # add the unique id of selected objects
+        #        for obj in context.selected_objects:
+        #            EM_add_property_to_obj(new_e_manager.unique_id, obj)
+
+        return {'FINISHED'}
+    
+
+
+class EM_epoch_manager_remove(bpy.types.Operator):
+
+    """Remove selected layer group"""
+    bl_idname = "epoch_manager.epoch_manager_remove"
+    bl_label = "Clear all epochs"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    group_idx = IntProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return bool(context.scene)
+
+    def execute(self, context):
+        scene_parse = context.scene
+        epoch_num = len(scene_parse.epoch_managers)
+        for i in range(epoch_num):
+            self.group_idx = scene_parse.epoch_managers_index
+            # if a scene contains goups
+            if scene_parse.epoch_managers:
+                check_same_ids()  # check scene ids
+                get_e_manager = scene_parse.epoch_managers[self.group_idx]
+                if get_e_manager is not None and self.group_idx < len(scene_parse.epoch_managers):
+                    e_manager_id = get_e_manager.unique_id
+
+                    # get all ids
+                    e_managers = []
+                    for e_manager in scene_parse.epoch_managers:
+                        e_managers.append(e_manager.unique_id)
+
+                    # clear context scene
+                    for obj in scene_parse.objects:
+                        EM_del_properties_from_obj(
+                            UNIQUE_ID_NAME, [e_manager_id], obj, True)
+
+                    # clear SGR scene
+                    sgr_scene_name = scene_parse.name + SCENE_EM
+                    if sgr_scene_name in bpy.data.scenes:
+                        sgr_scene = bpy.data.scenes[scene_parse.name + SCENE_EM]
+                        for obj in sgr_scene.objects:
+                            SGR_switch_object(obj, sgr_scene, scene_parse, e_manager_id)
+                            EM_del_properties_from_obj(
+                                UNIQUE_ID_NAME, [e_manager_id], obj, True)
+
+                        # remove group_scene if it's empty
+                        if len(sgr_scene.objects) == 0:
+                            bpy.data.scenes.remove(sgr_scene)
+
+                    # finally remove e_manager
+                    scene_parse.epoch_managers.remove(self.group_idx)
+                    if len(scene_parse.epoch_managers) > 0:
+                        scene_parse.epoch_managers_index = len(scene_parse.epoch_managers) - 1
+                    else:
+                        scene_parse.epoch_managers_index = -1
+#                    self.group_idx = scene_parse.epoch_managers_index
+        
+        return {'FINISHED'}
 
 class EM_add_to_group(bpy.types.Operator):
     bl_idname = "epoch_manager.add_to_group"
@@ -797,7 +727,7 @@ class EM_add_to_group(bpy.types.Operator):
                     # check if the group is hidden
                     if e_manager.use_toggle is False:
                         # Try to get or create new GroupScene
-                        group_scene = SGR_get_group_scene(context)
+                        group_scene = EM_get_group_scene(context)
                         if group_scene is None:
                             group_scene = EM_create_group_scene(context)
 
@@ -905,7 +835,7 @@ def check_same_ids():
                     if all_obj_list is None:
                         all_obj_list = []
                         all_obj_list += current_scene.objects
-                        group_scene = SGR_get_group_scene(bpy.context)
+                        group_scene = EM_get_group_scene(bpy.context)
                         if group_scene is not None:
                             all_obj_list += group_scene.objects
 

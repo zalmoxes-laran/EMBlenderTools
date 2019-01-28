@@ -187,6 +187,7 @@ class EM_import_GraphML(bpy.types.Operator):
                     scene.em_list[em_list_index_ema].y_pos = float(my_node_y_pos)
 #                    print('-' + my_nodename + '-' + ' has an icon: ' + EM_check_GraphML_Blender(my_nodename))
                     scene.em_list[em_list_index_ema].description = my_node_description
+                    scene.em_list[em_list_index_ema].shape = my_node_shape
                     em_list_index_ema += 1                    
                 else:
                     pass
