@@ -140,10 +140,8 @@ def select_list_element_from_obj_proxy(obj):
 def extract_epochs(node_element):
     geometry = node_element.find('.//{http://www.yworks.com/xml/graphml}Geometry')
     y_start = float(geometry.attrib['y'])
-#    print(y_start)
     context = bpy.context
     scene = context.scene    
-#    root.findall("./country/neighbor")
     epoch_list_clear(context)  
     epoch_list_index_ema = 0
     y_min = y_start
@@ -167,14 +165,7 @@ def extract_epochs(node_element):
         RowNodeLabelModelParameter = nodelabel.find('.//{http://www.yworks.com/xml/graphml}RowNodeLabelModelParameter')
         if RowNodeLabelModelParameter is not None:
             label_node = nodelabel.text
-            id_node = str(RowNodeLabelModelParameter.attrib['id'])
-
-            
-#            print("Il nodo " + str(label_node) + " ha un id: "+ str(id_node))
-#            print("Il nodo " + str(scene.epoch_list[epoch_list_index_ema].name) + " ha un id: "+ str(scene.epoch_list[epoch_list_index_ema].id))
-
-#            scene.em_list[em_list_index_ema].description = my_node_description
- 
+            id_node = str(RowNodeLabelModelParameter.attrib['id']) 
         else:
             id_node = "null"
             
@@ -183,29 +174,119 @@ def extract_epochs(node_element):
             if id_node == id_key:
                 scene.epoch_list[i].name = str(label_node)
 
-#                print("il nodo "+ str(scene.epoch_list[i].name) + " con id: " + str(scene.epoch_list[i].id) + " ha y min: " + str(scene.epoch_list[i].min_y) + " e y max: " + str(scene.epoch_list[i].max_y))
-
-
 def add_sceneobj_to_epochs():
     scene = bpy.context.scene
     #deselect all objects
     selection_names = bpy.context.selected_objects
     bpy.ops.object.select_all(action='DESELECT')
-
     #looking through all objects
     for obj in bpy.data.objects:
-        #if the object is a mesh and not a lamp or camera etc.
         if obj.type == 'MESH':
             for USS in scene.em_list:
                 if obj.name == USS.name:
-                    print("ho trovato un oggetto in scena chiamato "+ str(obj.name)+ " ed un nodo US chiamato: " + str(USS.name))
+                    #print("ho trovato un oggetto in scena chiamato "+ str(obj.name)+ " ed un nodo US chiamato: " + str(USS.name))
                     idx = 0
                     for i in scene.epoch_managers:
-            #            print(USS.epoch)
-             #           print(i.name)
                         if i.name == USS.epoch:
-                            print("found "+str(USS.epoch)+ " corrispondende all'indice"+str(idx))
+                            #print("found "+str(USS.epoch)+ " corrispondende all'indice"+str(idx))
                             obj.select = True
                             bpy.ops.epoch_manager.add_to_group(group_idx=idx)
                             obj.select = False
                         idx +=1
+                        
+                        
+                        
+#------------------- qui funzioni per materiali------------------------------------------
+
+def EM_mat_get_RGB_values(matname):
+    if matname == "US":
+        R = 0.328
+        G = 0.033
+        B = 0.033
+    elif matname == "USVs":
+         R = 0.031
+         G = 0.191
+         B = 0.026
+    elif matname == "USVn":
+        R = 0.018
+        G = 0.275
+        B = 0.799
+    elif matname == "VSF" or matname == "SF":
+        R = 0.799
+        G = 0.753
+        B = 0.347
+    return R, G, B
+
+def em_setup_mat_cycles(matname):
+#    image = mat.texture_slots[0].texture.image
+    R, G, B = EM_mat_get_RGB_values(matname)
+    mat = bpy.data.materials[matname]
+    mat.use_nodes = True
+    mat.node_tree.nodes.clear()
+    links = mat.node_tree.links
+    nodes = mat.node_tree.nodes
+    output = nodes.new('ShaderNodeOutputMaterial')
+    output.location = (0, 0)
+    mainNode = nodes.new('ShaderNodeBsdfDiffuse')
+    mainNode.inputs['Color'].default_value = (R,G,B)
+    mainNode.location = (-400, -50)
+    mainNode.name = "diffuse"
+#    colornode = nodes.new('ShaderNodeTexImage')
+#    colornode.location = (-1100, -50)
+        
+#    links.new(colornode.outputs[0], mainNode.inputs[0])
+    links.new(mainNode.outputs[0], output.inputs[0])
+
+def em_setup_mat_bi(matname):
+    R, G, B = EM_mat_get_RGB_values(matname)
+    mat = bpy.data.materials[matname]
+    mat.use_nodes = False
+    mat.diffuse_color = (R,G,B)
+    
+def check_material_presence(matname):
+    mat_presence = False
+    for mat in bpy.data.materials:
+        if mat.name == matname:
+            mat_presence = True
+            return mat_presence
+    return mat_presence
+    
+def consolidate_EM_material_presence(overwrite_mats):
+    EM_mat_list = ['US', 'USVs', 'USVn', 'VSF', 'SF']
+    for EM_mat_name in EM_mat_list:
+        if not check_material_presence(EM_mat_name):
+            EM_mat = bpy.data.materials.new(name=EM_mat_name)
+            overwrite_mats = True
+        if overwrite_mats == True:
+            em_setup_mat_bi(EM_mat_name)
+            em_setup_mat_bi(EM_mat_name)
+        
+        
+def set_EM_materials_using_EM_list(context):
+    em_list_lenght = len(context.scene.em_list)
+    print(str(em_list_lenght))
+    counter = 0
+    while counter < em_list_lenght:
+        current_ob_em_list = context.scene.em_list[counter]
+        #if ob.name == context.scene.em_list[counter].name:
+        overwrite_mats = True
+        consolidate_EM_material_presence(overwrite_mats)
+        if current_ob_em_list.icon == 'FILE_TICK':
+            current_ob_scene = context.scene.objects[current_ob_em_list.name]
+            current_ob_scene.name
+            print(current_ob_em_list.name + ' has symbol: ' +current_ob_em_list.shape)
+            if current_ob_em_list.shape ==  'rectangle':
+                ob_material_name = 'US'
+            if current_ob_em_list.shape ==  'ellipse':
+                ob_material_name = 'USVn'
+            if current_ob_em_list.shape ==  'parallelogram':
+                ob_material_name = 'USVs'
+            if current_ob_em_list.shape ==  'hexagon':
+                ob_material_name = 'USVn'
+            if current_ob_em_list.shape ==  'octagon':
+                ob_material_name = 'SF'
+            #if current_ob_em_list.shape =  'rectangle':
+            mat = bpy.data.materials[ob_material_name]
+            current_ob_scene.data.materials.clear()
+            current_ob_scene.data.materials.append(mat)
+        counter += 1

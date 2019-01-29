@@ -47,36 +47,14 @@ class EM_BasePanel(bpy.types.Panel):
         op.sg_objects_changer = 'SHOW_WIRE'
 
         op = row.operator(
-            "epoch_manager.change_selected_objects", text="", emboss=False, icon='MATERIAL')
-        op.sg_objects_changer = 'EM_COLOURS'
-
-#        row = layout.row(align=True)
-#        row.operator(
-#            "epoch_manager.epoch_manager_add", icon='ZOOMIN', text="")
-#        op = row.operator(
-#            "epoch_manager.epoch_manager_remove", icon='ZOOMOUT', text="")
-#        op.group_idx = scene.epoch_managers_index
-
-#        op = row.operator(
-#            "epoch_manager.epoch_manager_move", icon='TRIA_UP', text="")
-#        op.do_move = 'UP'
-
-#        op = row.operator(
-#            "epoch_manager.epoch_manager_move", icon='TRIA_DOWN', text="")
-#        op.do_move = 'DOWN'
+            "emset.emmaterial", text="", emboss=False, icon='MATERIAL')
+        #op.sg_objects_changer = 'EM_COLOURS'
 
         row = layout.row()
         row.template_list(
             "EM_named_epoch_managers", "", scene, "epoch_managers", scene, "epoch_managers_index")
 
-#        row = layout.row()
-#        op = row.operator("epoch_manager.add_to_group", text="Add")
-#        op.group_idx = scene.epoch_managers_index
 
-#        row.operator(
-#            "epoch_manager.super_remove_from_group", text="Remove")
-#        row.operator("epoch_manager.clean_object_ids", text="Clean")
-        # layout.separator()
         layout.label(text="Selection Settings:")
         row = layout.row(align=True)
         row.prop(sg_settings, "select_all_layers", text='Layers')
@@ -237,19 +215,15 @@ def generate_id():
         if uniq_id_temp not in other_ids:
             uni_numb = uniq_id_temp
             break
-
     other_ids = None  # clean
     return uni_numb
 
 class EM_clean_object_ids(bpy.types.Operator):
-
     """Remove selected layer group"""
     bl_idname = "epoch_manager.clean_object_ids"
     bl_label = "Clean Objects IDs if the objects were imported from other blend files"
     bl_options = {'REGISTER', 'UNDO'}
-
     # group_idx = bpy.props.IntProperty()
-
     @classmethod
     def poll(cls, context):
         return bool(context.scene)
@@ -388,7 +362,6 @@ class EM_toggle_visibility(bpy.types.Operator):
         scene = context.scene
         if self.group_idx < len(scene.epoch_managers):
             # check_same_ids()  # check scene ids
-
             current_e_manager = scene.epoch_managers[self.group_idx]
 
             # Try to get or create new GroupScene
@@ -437,19 +410,16 @@ def EM_switch_object(obj, scene_source, scene_terget, e_manager_id):
             scene_source.objects.unlink(obj)
             layers = None  # clean
 
-
 def sg_is_object_in_e_managers(groups_prop_values, obj):
     is_in_group = False
     for prop in obj.em_belong_id:
         if prop.unique_id_object in groups_prop_values:
             is_in_group = True
             break
-
     if is_in_group:
         return True
     else:
         return False
-
 
 class EM_change_grouped_objects(bpy.types.Operator):
     bl_idname = "epoch_manager.change_grouped_objects"
@@ -509,6 +479,16 @@ class EM_change_grouped_objects(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class EM_set_EM_materials(bpy.types.Operator):
+    bl_idname = "emset.emmaterial"
+    bl_label = "Change proxy materials"
+    bl_description = "Change proxy materials"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        update_icons(context)
+        set_EM_materials_using_EM_list(context)
+        return {'FINISHED'}
 
 class EM_change_selected_objects(bpy.types.Operator):
     bl_idname = "epoch_manager.change_selected_objects"
@@ -550,25 +530,11 @@ class EM_change_selected_objects(bpy.types.Operator):
             elif self.sg_objects_changer == 'TWOSIDE_SHADE':
                 if obj.type == 'MESH':
                     obj.data.show_double_sided = True
-            elif self.sg_objects_changer == 'EM_COLOURS':
-                if obj.type == 'MESH':
-                    set_EM_materials_to_selected(context)
+#            elif self.sg_objects_changer == 'EM_COLOURS':
+#                if obj.type == 'MESH':
+#                    set_EM_materials_using_EM_list(context)
 
         return {'FINISHED'}
-
-
-def set_EM_materials_to_selected(context):
-    em_list_lenght = len(context.scene.em_list)
-    print(str(em_list_lenght))
-    counter = 0
-    while counter < em_list_lenght:
-        #if ob.name == context.scene.em_list[counter].name:
-        if context.scene.em_list[counter].icon == 'FILE_TICK':
-            obj = select_3D_obj(context.scene.em_list[counter].name)
-                #qui inserisco una funzione per poter trovare l'oggetto in scena con lo sesos nome 
-            print(obj.name + context.scene.em_list[counter].name + context.scene.em_list[counter].shape)
-        counter += 1
-    
 
 class EM_epoch_manager_add(bpy.types.Operator):
 
@@ -583,15 +549,10 @@ class EM_epoch_manager_add(bpy.types.Operator):
 
     def execute(self, context):
         
-        bpy.ops.epoch_manager.epoch_manager_remove()
-        
+        bpy.ops.epoch_manager.epoch_manager_remove()        
         scene = context.scene
-
         epoch_number = len(scene.epoch_list)
-
         for epoch in range(epoch_number):
-        #        print(epoch_number)
-            
             epochname = scene.epoch_list[epoch].name
 
             check_same_ids()  # check scene ids
@@ -604,30 +565,18 @@ class EM_epoch_manager_add(bpy.types.Operator):
                 if e_manager.unique_id not in all_ids:
                     all_ids.append(e_manager.unique_id)
 
-            # remove e_managers
-        #       si presuppone che abbiamo gi� pulito le epoche
-        #        for obj in context.selected_objects:
-        #            for e_manager in epoch_managers:
-        #                EM_del_properties_from_obj(UNIQUE_ID_NAME, all_ids, obj, True)
-
-            # generate new id
+             # generate new id
             uni_numb = generate_id()
             all_ids = None
 
             group_idx = len(epoch_managers)
             new_e_manager = epoch_managers.add()
-        #            new_e_manager.name = "EM.%.3d" % group_idx
             new_e_manager.name = epochname
             new_e_manager.unique_id = uni_numb
             scene.epoch_managers_index = group_idx
 
-            # add the unique id of selected objects
-        #        for obj in context.selected_objects:
-        #            EM_add_property_to_obj(new_e_manager.unique_id, obj)
-
         return {'FINISHED'}
     
-
 
 class EM_epoch_manager_remove(bpy.types.Operator):
 
