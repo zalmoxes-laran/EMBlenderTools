@@ -26,7 +26,7 @@ class EMToolsPanel(bpy.types.Panel):
     bl_context = "objectmode"
     bl_category = "EM"
     bl_label = "Extended Matrix"
-     
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
@@ -36,7 +36,7 @@ class EMToolsPanel(bpy.types.Panel):
         row = box.row(align=True)
         row.label(text="EM file")
         row = box.row(align=True)
-        row.prop(context.scene, 'EM_file', toggle = True, text ="") 
+        row.prop(context.scene, 'EM_file', toggle = True, text ="")
         row = box.row(align=True)
         split = row.split()
         col = split.column()
@@ -44,7 +44,7 @@ class EMToolsPanel(bpy.types.Panel):
 #        row = layout.row()
         col = split.column(align=True)
         col.operator("uslist_icon.update", icon="PARTICLE_DATA", text='Refresh icons')
-        
+
         row = layout.row()
         layout.alignment = 'LEFT'
         row.label(text="List of US/USV in EM file:")
@@ -53,37 +53,37 @@ class EMToolsPanel(bpy.types.Panel):
 
         split = layout.split()
         col = split.column()
-        
+
 #       tools to select proxies and UUSS
 
         # First column, aligned
 #        row = layout.row(align=True)
         if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
-            col.operator("select.fromlistitem", icon="HAND", text='EM2Proxy')
+            col.operator("select.fromlistitem", icon="HAND", text='EM -> Proxy')
 
         # Second column, aligned
         col = split.column(align=True)
         if check_if_current_obj_has_brother_inlist(obj.name):
-            col.operator("select.listitem", icon="HAND", text='Proxy2EM')
+            col.operator("select.listitem", icon="HAND", text='Proxy -> EM')
 
         # Third column, aligned
 #        row = layout.row()
         split = layout.split()
         col = split.column(align=True)
-        col.prop(sg_settings, "em_proxy_sync2", text='Sync EM2Proxy')
+        col.prop(sg_settings, "em_proxy_sync2", text='EM -> Proxy')
 
         col = split.column(align=True)
         col.prop(sg_settings, "em_proxy_sync2_zoom", text='+ locate')
-        
+
         col = split.column(align=True)
-        col.prop(sg_settings, "em_proxy_sync", text='Sync Proxy2EM')
+        col.prop(sg_settings, "em_proxy_sync", text='Proxy -> EM')
 
         if scene.sg_settings.em_proxy_sync:
             if check_if_current_obj_has_brother_inlist(obj.name):
                 select_list_element_from_obj_proxy(obj)
 
         if scene.sg_settings.em_proxy_sync2:
-            if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':    
+            if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
                 list_item = scene.em_list[scene.em_list_index]
                 if list_item.name != obj.name:
                     select_3D_obj(list_item.name)
@@ -94,7 +94,7 @@ class EMToolsPanel(bpy.types.Panel):
                                 ctx['area'] = area
                                 ctx['region'] = area.regions[-1]
                                 bpy.ops.view3d.view_selected(ctx)
-            
+
         if scene.em_list_index >= 0 and len(scene.em_list) > 0:
             item = scene.em_list[scene.em_list_index]
             box = layout.box()
@@ -107,16 +107,16 @@ class EMToolsPanel(bpy.types.Panel):
             row = box.row()
 #            layout.alignment = 'LEFT'
             row.prop(item, "description", text="", slider=True)
-        if obj.type in ['MESH']:  
+        if obj.type in ['MESH']:
             obj = context.object
             box = layout.box()
-            row = box.row()            
+            row = box.row()
             row.label(text="Override active object's name:")#: " + obj.name)
             row = box.row()
             row.prop(obj, "name", "Manual")
             row = box.row()
             row.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='Using EM list')
-                    
+
 #### da qui si definiscono le funzioni e gli operatori
 
 
@@ -124,28 +124,29 @@ class EM_usname_OT_toproxy(bpy.types.Operator):
     bl_idname = "usname.toproxy"
     bl_label = "Use US name for selected proxy"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def execute(self, context):
         scene = context.scene
         item = scene.em_list[scene.em_list_index]
         scene.objects.active.name = item.name
         update_icons(context)
+        set_EM_materials_using_EM_list(context)
         return {'FINISHED'}
 
 class EM_update_icon_list(bpy.types.Operator):
     bl_idname = "uslist_icon.update"
     bl_label = "Update only the icons"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def execute(self, context):
         update_icons(context)
         return {'FINISHED'}
-       
+
 class EM_select_list_item(bpy.types.Operator):
     bl_idname = "select.listitem"
     bl_label = "Select element in the list above from a 3D proxy"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def execute(self, context):
         scene = context.scene
         obj = context.object
@@ -156,7 +157,7 @@ class EM_select_from_list_item(bpy.types.Operator):
     bl_idname = "select.fromlistitem"
     bl_label = "Select 3D proxy from the list above"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def execute(self, context):
         scene = context.scene
         list_item = scene.em_list[scene.em_list_index]
@@ -167,12 +168,12 @@ class EM_import_GraphML(bpy.types.Operator):
     bl_idname = "import.em_graphml"
     bl_label = "Import the EM GraphML"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def execute(self, context):
         scene = context.scene
         graphml_file = scene.EM_file
-        tree = ET.parse(graphml_file)      
-        EM_list_clear(context)       
+        tree = ET.parse(graphml_file)
+        EM_list_clear(context)
         em_list_index_ema = 0
 #        tree = ET.parse('/Users/emanueldemetrescu/Desktop/EM_test.graphml')
         allnodes = tree.findall('.//{http://graphml.graphdrawing.org/xmlns}node')
@@ -188,7 +189,7 @@ class EM_import_GraphML(bpy.types.Operator):
 #                    print('-' + my_nodename + '-' + ' has an icon: ' + EM_check_GraphML_Blender(my_nodename))
                     scene.em_list[em_list_index_ema].description = my_node_description
                     scene.em_list[em_list_index_ema].shape = my_node_shape
-                    em_list_index_ema += 1                    
+                    em_list_index_ema += 1
                 else:
                     pass
             if EM_check_node_type(node_element) == 'node_swimlane':
