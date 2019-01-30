@@ -1,8 +1,9 @@
 '''
 Copyright (C) 2018 Emanuel Demetrescu
-emanuel.demetrescu@gmail.com
 
-Created by EMANUEL DEMETRESCU
+
+Created by EMANUEL DEMETRESCU 2018-2019
+emanuel.demetrescu@gmail.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +23,7 @@ bl_info = {
     "name": "EM tools",
     "description": "Blender tools for Extended Matrix",
     "author": "E. Demetrescu",
-    "version": (1, 0, 7),
+    "version": (1, 0, 8),
     "blender": (2, 79, 0),
     "location": "Tool Shelf panel",
     "warning": "This addon is still in development.",
@@ -47,7 +48,7 @@ from bpy.props import (BoolProperty,
                        IntProperty
                        )
 from .functions import *
-from bpy.props import StringProperty, BoolProperty, IntProperty, CollectionProperty, BoolVectorProperty, PointerProperty, FloatVectorProperty                       
+from bpy.props import StringProperty, BoolProperty, IntProperty, CollectionProperty, BoolVectorProperty, PointerProperty, FloatVectorProperty
 
 from bpy.types import Menu, Panel, UIList, PropertyGroup
 from . import developer_utils
@@ -84,10 +85,10 @@ class EM_Other_Settings(PropertyGroup):
     select_all_layers = BoolProperty(name="Select Visible Layers", default=True)
     unlock_obj = BoolProperty(name="Unlock Objects", default=False)
     unhide_obj = BoolProperty(name="Unhide Objects", default=True)
-    em_proxy_sync = BoolProperty(name="Sync EM Proxy selection", default=True, update = settingsSwitch)
-    em_proxy_sync2 = BoolProperty(name="Sync EM Proxy selection2", default=True, update = settingsSwitch)
-    em_proxy_sync2_zoom = BoolProperty(name="Sync EM Proxy selection2 zoom", default=True, update = settingsSwitch)
-   
+    em_proxy_sync = BoolProperty(name="Sync EM Proxy selection", default=False, update = settingsSwitch)
+    em_proxy_sync2 = BoolProperty(name="Sync EM Proxy selection2", default=False, update = settingsSwitch)
+    em_proxy_sync2_zoom = BoolProperty(name="Sync EM Proxy selection2 zoom", default=False, update = settingsSwitch)
+
 #######################################################################################################################
 
 class EMListItem(bpy.types.PropertyGroup):
@@ -97,7 +98,7 @@ class EMListItem(bpy.types.PropertyGroup):
            name="Name",
            description="A name for this item",
            default="Untitled")
-    
+
     description = prop.StringProperty(
            name="Description",
            description="A description for this item",
@@ -107,27 +108,27 @@ class EMListItem(bpy.types.PropertyGroup):
            name="code for icon",
            description="",
            default="QUESTION")
-    
+
     url = prop.StringProperty(
            name="url",
            description="An url behind this item",
            default="Empty")
-    
+
     shape = prop.StringProperty(
            name="shape",
            description="The shape of this item",
            default="Empty")
-    
+
     y_pos = prop.FloatProperty(
            name="y_pos",
            description="The y_pos of this item",
            default=0.0)
-           
+
     epoch = prop.StringProperty(
            name="code for epoch",
            description="",
-           default="Empty")           
-    
+           default="Empty")
+
 
 class EPOCHListItem(bpy.types.PropertyGroup):
     """ Group of properties representing an item in the list """
@@ -136,7 +137,7 @@ class EPOCHListItem(bpy.types.PropertyGroup):
            name="Name",
            description="A name for this item",
            default="Untitled")
-    
+
     id = prop.StringProperty(
            name="id",
            description="A description for this item",
@@ -151,7 +152,7 @@ class EPOCHListItem(bpy.types.PropertyGroup):
            name="code for icon",
            description="",
            default=0.0)
-           
+
     height = prop.FloatProperty(
            name="height of epoch row",
            description="",
