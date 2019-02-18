@@ -228,7 +228,7 @@ def em_setup_mat_cycles(matname):
     output = nodes.new('ShaderNodeOutputMaterial')
     output.location = (0, 0)
     mainNode = nodes.new('ShaderNodeBsdfDiffuse')
-    mainNode.inputs['Color'].default_value = (R,G,B)
+    mainNode.inputs['Color'].default_value = (R,G,B,0.5)
     mainNode.location = (-400, -50)
     mainNode.name = "diffuse"
 #    colornode = nodes.new('ShaderNodeTexImage')
@@ -242,6 +242,8 @@ def em_setup_mat_bi(matname):
     mat = bpy.data.materials[matname]
     mat.use_nodes = False
     mat.diffuse_color = (R,G,B)
+    mat.use_transparency = True
+    mat.alpha = 0.5
     
 def check_material_presence(matname):
     mat_presence = False
@@ -258,9 +260,12 @@ def consolidate_EM_material_presence(overwrite_mats):
             EM_mat = bpy.data.materials.new(name=EM_mat_name)
             overwrite_mats = True
         if overwrite_mats == True:
-            em_setup_mat_bi(EM_mat_name)
-            em_setup_mat_bi(EM_mat_name)
-        
+            scene = bpy.context.scene
+            if scene.render.engine == 'CYCLES':
+                em_setup_mat_cycles(EM_mat_name)
+            else:
+                em_setup_mat_bi(EM_mat_name)
+            
         
 def set_EM_materials_using_EM_list(context):
     em_list_lenght = len(context.scene.em_list)
