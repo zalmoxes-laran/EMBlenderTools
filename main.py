@@ -45,79 +45,79 @@ class EMToolsPanel(bpy.types.Panel):
         col = split.column(align=True)
         col.operator("uslist_icon.update", icon="PARTICLE_DATA", text='Refresh icons')
 
-        if bpy.types.Scene.em_list is True:
+        #if bpy.types.Scene.em_list is True:
 
-            row = layout.row()
-            layout.alignment = 'LEFT'
-            row.label(text="List of US/USV in EM file:")
-            row = layout.row()
-            row.template_list("EM_UL_List", "EM nodes", scene, "em_list", scene, "em_list_index")
+        row = layout.row()
+        layout.alignment = 'LEFT'
+        row.label(text="List of US/USV in EM file:")
+        row = layout.row()
+        row.template_list("EM_UL_List", "EM nodes", scene, "em_list", scene, "em_list_index")
 
-            split = layout.split()
-            col = split.column()
+        split = layout.split()
+        col = split.column()
 
-    #       tools to select proxies and UUSS
+#       tools to select proxies and UUSS
 
-            # First column, aligned
-    #        row = layout.row(align=True)
-            if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
-                col.operator("select.fromlistitem", icon="HAND", text='EM -> Proxy')
+        # First column, aligned
+#        row = layout.row(align=True)
+        if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
+            col.operator("select.fromlistitem", icon="HAND", text='EM -> Proxy')
 
-            # Second column, aligned
-            col = split.column(align=True)
+        # Second column, aligned
+        col = split.column(align=True)
+        if check_if_current_obj_has_brother_inlist(obj.name):
+            col.operator("select.listitem", icon="HAND", text='Proxy -> EM')
+
+        # Third column, aligned
+#        row = layout.row()
+        split = layout.split()
+        col = split.column(align=True)
+        col.prop(sg_settings, "em_proxy_sync2", text='EM -> Proxy')
+
+        col = split.column(align=True)
+        col.prop(sg_settings, "em_proxy_sync2_zoom", text='+ locate')
+
+        col = split.column(align=True)
+        col.prop(sg_settings, "em_proxy_sync", text='Proxy -> EM')
+
+        if scene.sg_settings.em_proxy_sync:
             if check_if_current_obj_has_brother_inlist(obj.name):
-                col.operator("select.listitem", icon="HAND", text='Proxy -> EM')
+                select_list_element_from_obj_proxy(obj)
 
-            # Third column, aligned
-    #        row = layout.row()
-            split = layout.split()
-            col = split.column(align=True)
-            col.prop(sg_settings, "em_proxy_sync2", text='EM -> Proxy')
+        if scene.sg_settings.em_proxy_sync2:
+            if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
+                list_item = scene.em_list[scene.em_list_index]
+                if list_item.name != obj.name:
+                    select_3D_obj(list_item.name)
+                    if scene.sg_settings.em_proxy_sync2_zoom:
+                        for area in bpy.context.screen.areas:
+                            if area.type == 'VIEW_3D':
+                                ctx = bpy.context.copy()
+                                ctx['area'] = area
+                                ctx['region'] = area.regions[-1]
+                                bpy.ops.view3d.view_selected(ctx)
 
-            col = split.column(align=True)
-            col.prop(sg_settings, "em_proxy_sync2_zoom", text='+ locate')
-
-            col = split.column(align=True)
-            col.prop(sg_settings, "em_proxy_sync", text='Proxy -> EM')
-
-            if scene.sg_settings.em_proxy_sync:
-                if check_if_current_obj_has_brother_inlist(obj.name):
-                    select_list_element_from_obj_proxy(obj)
-
-            if scene.sg_settings.em_proxy_sync2:
-                if scene.em_list[scene.em_list_index].icon == 'FILE_TICK':
-                    list_item = scene.em_list[scene.em_list_index]
-                    if list_item.name != obj.name:
-                        select_3D_obj(list_item.name)
-                        if scene.sg_settings.em_proxy_sync2_zoom:
-                            for area in bpy.context.screen.areas:
-                                if area.type == 'VIEW_3D':
-                                    ctx = bpy.context.copy()
-                                    ctx['area'] = area
-                                    ctx['region'] = area.regions[-1]
-                                    bpy.ops.view3d.view_selected(ctx)
-
-            if scene.em_list_index >= 0 and len(scene.em_list) > 0:
-                item = scene.em_list[scene.em_list_index]
-                box = layout.box()
-                row = box.row(align=True)
-                row.label(text="US/USV name, description:")
-                row = box.row()
-                row.prop(item, "name", text="")
-    #            row = layout.row()
-    #            row.label(text="Description:")
-                row = box.row()
-    #            layout.alignment = 'LEFT'
-                row.prop(item, "description", text="", slider=True)
-            if obj.type in ['MESH']:
-                obj = context.object
-                box = layout.box()
-                row = box.row()
-                row.label(text="Override active object's name:")#: " + obj.name)
-                row = box.row()
-                row.prop(obj, "name", "Manual")
-                row = box.row()
-                row.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='Using EM list')
+        if scene.em_list_index >= 0 and len(scene.em_list) > 0:
+            item = scene.em_list[scene.em_list_index]
+            box = layout.box()
+            row = box.row(align=True)
+            row.label(text="US/USV name, description:")
+            row = box.row()
+            row.prop(item, "name", text="")
+#            row = layout.row()
+#            row.label(text="Description:")
+            row = box.row()
+#            layout.alignment = 'LEFT'
+            row.prop(item, "description", text="", slider=True)
+        if obj.type in ['MESH']:
+            obj = context.object
+            box = layout.box()
+            row = box.row()
+            row.label(text="Override active object's name:")#: " + obj.name)
+            row = box.row()
+            row.prop(obj, "name", "Manual")
+            row = box.row()
+            row.operator("usname.toproxy", icon="OUTLINER_DATA_FONT", text='Using EM list')
 
 #### da qui si definiscono le funzioni e gli operatori
 
